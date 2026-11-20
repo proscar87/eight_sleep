@@ -539,6 +539,24 @@ class EightSleep:
 
         _LOGGER.debug(f"Device: {self.device_id}, Pod: {self._is_pod}, Base: {self._has_base}, Speaker: {self._has_speaker}")
 
+        # TEMP #119: log device_data key NAMES only (never values), one
+        # level deep, and only when the set changes.
+        names = set()
+        for key, value in data.items():
+            names.add(key)
+            if isinstance(value, dict):
+                names.update(f"{key}.{sub}" for sub in value)
+        prev = getattr(self, "_debug119_keys", None)
+        if prev is None:
+            _LOGGER.debug("ES119 keys initial (%d): %s", len(names), sorted(names))
+        elif names != prev:
+            _LOGGER.debug(
+                "ES119 keys changed: added=%s removed=%s",
+                sorted(names - prev),
+                sorted(prev - names),
+            )
+        self._debug119_keys = names
+
     async def fetch_device_id(self) -> None:
         """Fetch device id for backwards compatibility."""
         url = f"{CLIENT_API_URL}/users/me"
